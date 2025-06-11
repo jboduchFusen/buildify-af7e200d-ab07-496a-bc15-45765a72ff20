@@ -1,45 +1,10 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useGolfData, Round } from '@/context/GolfDataContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { PlusCircle, MoreHorizontal, Search, GolfClub } from 'lucide-react';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { useGolfData, Round } from '../context/GolfDataContext';
+import { PlusCircle, MoreHorizontal, Search, GolfClub, Trash2 } from 'lucide-react';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import '../styles/rounds.css';
 
 const Rounds = () => {
   const location = useLocation();
@@ -50,10 +15,27 @@ const Rounds = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [playerFilter, setPlayerFilter] = useState(initialPlayerId);
   const [courseFilter, setCourseFilter] = useState(initialCourseId);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
-  if (loading) {
-    return <LoadingSpinner />;
-  }
+  // Reset filters when navigating away
+  useEffect(() => {
+    return () => {
+      setPlayerFilter('');
+      setCourseFilter('');
+      setSearchQuery('');
+    };
+  }, []);
+
+  const toggleDropdown = (roundId: string) => {
+    setActiveDropdown(activeDropdown === roundId ? null : roundId);
+  };
+
+  const handleDeleteRound = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this round?')) {
+      deleteRound(id);
+      setActiveDropdown(null);
+    }
+  };
 
   const filteredRounds = rounds.filter(round => {
     const player = players.find(p => p.id === round.playerId);
@@ -89,205 +71,190 @@ const Rounds = () => {
     setSearchQuery('');
   };
 
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Rounds</h1>
-        <Button asChild>
-          <Link to="/rounds/add">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Round
-          </Link>
-        </Button>
+    <div className="rounds-container">
+      <div className="rounds-header">
+        <h1 className="rounds-title">Rounds</h1>
+        <Link to="/rounds/add" className="btn btn-primary">
+          <PlusCircle className="btn-icon-left" />
+          Add Round
+        </Link>
       </div>
 
-      <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
+      <div className="search-filters">
+        <div className="search-container">
+          <Search className="search-icon" />
+          <input
+            type="text"
+            className="form-input search-input"
             placeholder="Search rounds..."
-            className="pl-8"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         
-        <div className="grid grid-cols-2 gap-2 md:w-2/5">
-          <Select value={playerFilter} onValueChange={setPlayerFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by player" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">All Players</SelectItem>
+        <div className="filters-group">
+          <div className="select-container">
+            <select 
+              className="form-select select"
+              value={playerFilter}
+              onChange={(e) => setPlayerFilter(e.target.value)}
+            >
+              <option value="">All Players</option>
               {players.map(player => (
-                <SelectItem key={player.id} value={player.id}>{player.name}</SelectItem>
+                <option key={player.id} value={player.id}>{player.name}</option>
               ))}
-            </SelectContent>
-          </Select>
+            </select>
+          </div>
           
-          <Select value={courseFilter} onValueChange={setCourseFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by course" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">All Courses</SelectItem>
+          <div className="select-container">
+            <select 
+              className="form-select select"
+              value={courseFilter}
+              onChange={(e) => setCourseFilter(e.target.value)}
+            >
+              <option value="">All Courses</option>
               {courses.map(course => (
-                <SelectItem key={course.id} value={course.id}>{course.name}</SelectItem>
+                <option key={course.id} value={course.id}>{course.name}</option>
               ))}
-            </SelectContent>
-          </Select>
+            </select>
+          </div>
         </div>
         
         {(playerFilter || courseFilter || searchQuery) && (
-          <Button variant="outline" onClick={clearFilters} className="md:w-auto">
+          <button 
+            className="clear-filters"
+            onClick={clearFilters}
+          >
             Clear Filters
-          </Button>
+          </button>
         )}
       </div>
 
       {rounds.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center animate-in fade-in-50">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
-            <GolfClub className="h-10 w-10 text-primary" />
+        <div className="empty-rounds">
+          <div className="empty-icon-container">
+            <GolfClub className="empty-icon" />
           </div>
-          <h2 className="mt-6 text-xl font-semibold">No rounds yet</h2>
-          <p className="mb-8 mt-2 text-center text-sm text-muted-foreground max-w-sm">
+          <h2 className="empty-title">No rounds yet</h2>
+          <p className="empty-description">
             You haven't recorded any golf rounds yet. Add your first round to start tracking your progress.
           </p>
-          <Button asChild>
-            <Link to="/rounds/add">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Round
-            </Link>
-          </Button>
+          <Link to="/rounds/add" className="btn btn-primary">
+            <PlusCircle className="btn-icon-left" />
+            Add Round
+          </Link>
         </div>
       ) : filteredRounds.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-8 text-center">
-          <h2 className="text-xl font-semibold">No matching rounds</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
+        <div className="no-matching-rounds">
+          <h2 className="no-matching-title">No matching rounds</h2>
+          <p className="no-matching-description">
             No rounds match your current filters. Try adjusting your search or filters.
           </p>
-          <Button variant="outline" onClick={clearFilters} className="mt-4">
+          <button 
+            className="btn btn-outline"
+            onClick={clearFilters}
+          >
             Clear All Filters
-          </Button>
+          </button>
         </div>
       ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Player</TableHead>
-                <TableHead>Course</TableHead>
-                <TableHead>Score</TableHead>
-                <TableHead>vs Par</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredRounds.map((round) => (
-                <RoundRow 
-                  key={round.id} 
-                  round={round} 
-                  onDelete={deleteRound} 
-                />
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <table className="rounds-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Player</th>
+              <th>Course</th>
+              <th>Score</th>
+              <th>vs Par</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredRounds.map(round => {
+              const { getPlayerById, getCourseById } = useGolfData();
+              const player = getPlayerById(round.playerId);
+              const course = getCourseById(round.courseId);
+              
+              const scoreToPar = course ? round.score - course.par : null;
+              const scoreToParDisplay = scoreToPar !== null 
+                ? (scoreToPar === 0 ? 'E' : (scoreToPar > 0 ? `+${scoreToPar}` : scoreToPar)) 
+                : '-';
+              
+              const scoreToParClass = scoreToPar === 0 ? 'even' : (scoreToPar && scoreToPar > 0 ? 'over' : 'under');
+              
+              return (
+                <tr key={round.id}>
+                  <td>{new Date(round.date).toLocaleDateString()}</td>
+                  <td>
+                    {player && (
+                      <Link to={`/players/${player.id}`} className="player-link">
+                        {player.name}
+                      </Link>
+                    )}
+                  </td>
+                  <td>
+                    {course && (
+                      <Link to={`/courses/${course.id}`} className="course-link">
+                        {course.name}
+                      </Link>
+                    )}
+                  </td>
+                  <td className="score">{round.score}</td>
+                  <td className={`score-to-par ${scoreToParClass}`}>{scoreToParDisplay}</td>
+                  <td>
+                    <div className="dropdown">
+                      <button 
+                        className="dropdown-button"
+                        onClick={() => toggleDropdown(round.id)}
+                      >
+                        <MoreHorizontal />
+                      </button>
+                      {activeDropdown === round.id && (
+                        <div className="dropdown-menu">
+                          <div className="dropdown-label">Actions</div>
+                          <div className="dropdown-separator"></div>
+                          {player && (
+                            <Link 
+                              to={`/players/${player.id}`} 
+                              className="dropdown-item"
+                              onClick={() => setActiveDropdown(null)}
+                            >
+                              View player
+                            </Link>
+                          )}
+                          {course && (
+                            <Link 
+                              to={`/courses/${course.id}`} 
+                              className="dropdown-item"
+                              onClick={() => setActiveDropdown(null)}
+                            >
+                              View course
+                            </Link>
+                          )}
+                          <div className="dropdown-separator"></div>
+                          <button 
+                            className="dropdown-item destructive"
+                            onClick={() => handleDeleteRound(round.id)}
+                          >
+                            <Trash2 className="dropdown-icon" />
+                            Delete round
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       )}
     </div>
-  );
-};
-
-interface RoundRowProps {
-  round: Round;
-  onDelete: (id: string) => Promise<void>;
-}
-
-const RoundRow = ({ round, onDelete }: RoundRowProps) => {
-  const { getPlayerById, getCourseById } = useGolfData();
-  const player = getPlayerById(round.playerId);
-  const course = getCourseById(round.courseId);
-  
-  const scoreToPar = course ? round.score - course.par : null;
-  const scoreToParDisplay = scoreToPar !== null 
-    ? (scoreToPar === 0 ? 'E' : (scoreToPar > 0 ? `+${scoreToPar}` : scoreToPar)) 
-    : '-';
-
-  return (
-    <TableRow>
-      <TableCell>{new Date(round.date).toLocaleDateString()}</TableCell>
-      <TableCell>
-        {player ? (
-          <Link to={`/players/${player.id}`} className="hover:underline">
-            {player.name}
-          </Link>
-        ) : (
-          'Unknown Player'
-        )}
-      </TableCell>
-      <TableCell>
-        {course ? (
-          <Link to={`/courses/${course.id}`} className="hover:underline">
-            {course.name}
-          </Link>
-        ) : (
-          'Unknown Course'
-        )}
-      </TableCell>
-      <TableCell className="font-medium">{round.score}</TableCell>
-      <TableCell>{scoreToParDisplay}</TableCell>
-      <TableCell>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MoreHorizontal className="h-4 w-4" />
-              <span className="sr-only">Open menu</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {player && (
-              <DropdownMenuItem asChild>
-                <Link to={`/players/${player.id}`}>View player</Link>
-              </DropdownMenuItem>
-            )}
-            {course && (
-              <DropdownMenuItem asChild>
-                <Link to={`/courses/${course.id}`}>View course</Link>
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuSeparator />
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive">
-                  Delete round
-                </DropdownMenuItem>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete this round?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction 
-                    onClick={() => onDelete(round.id)} 
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  >
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </TableCell>
-    </TableRow>
   );
 };
 

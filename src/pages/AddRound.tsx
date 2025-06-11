@@ -1,28 +1,10 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { useGolfData } from '@/context/GolfDataContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useGolfData } from '../context/GolfDataContext';
 import { ChevronLeft } from 'lucide-react';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import '../styles/add-round.css';
 
 const AddRound = () => {
   const navigate = useNavigate();
@@ -106,111 +88,113 @@ const AddRound = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="flex items-center mb-6">
-        <Button variant="outline" size="sm" asChild className="mr-4">
-          <Link to="/rounds">
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Back
-          </Link>
-        </Button>
-        <h1 className="text-3xl font-bold tracking-tight">Add New Round</h1>
+    <div className="add-round-container">
+      <div className="add-round-header">
+        <Link to="/rounds" className="btn btn-outline back-button">
+          <ChevronLeft className="btn-icon-left" />
+          Back
+        </Link>
+        <h1 className="add-round-title">Add New Round</h1>
       </div>
       
-      <Card>
+      <div className="add-round-card">
+        <div className="card-header">
+          <h2 className="card-title">Round Details</h2>
+          <p className="card-description">
+            Record a new golf round with player, course, and score information.
+          </p>
+        </div>
         <form onSubmit={handleSubmit}>
-          <CardHeader>
-            <CardTitle>Round Details</CardTitle>
-            <CardDescription>
-              Record a new golf round with player, course, and score information.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="player">Player</Label>
-              <Select 
-                value={formData.playerId} 
-                onValueChange={(value) => handleChange('playerId', value)}
+          <div className="card-content">
+            <div className="form-group">
+              <label htmlFor="player" className="form-label">Player</label>
+              <select 
+                id="player"
+                className={`form-select ${errors.playerId ? 'error' : ''}`}
+                value={formData.playerId}
+                onChange={(e) => handleChange('playerId', e.target.value)}
               >
-                <SelectTrigger id="player" className={errors.playerId ? 'border-destructive' : ''}>
-                  <SelectValue placeholder="Select a player" />
-                </SelectTrigger>
-                <SelectContent>
-                  {players.map(player => (
-                    <SelectItem key={player.id} value={player.id}>{player.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <option value="">Select a player</option>
+                {players.map(player => (
+                  <option key={player.id} value={player.id}>{player.name}</option>
+                ))}
+              </select>
               {errors.playerId && (
-                <p className="text-sm text-destructive">Please select a player</p>
+                <p className="error-message">Please select a player</p>
               )}
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="course">Course</Label>
-              <Select 
-                value={formData.courseId} 
-                onValueChange={(value) => handleChange('courseId', value)}
+            <div className="form-group">
+              <label htmlFor="course" className="form-label">Course</label>
+              <select 
+                id="course"
+                className={`form-select ${errors.courseId ? 'error' : ''}`}
+                value={formData.courseId}
+                onChange={(e) => handleChange('courseId', e.target.value)}
               >
-                <SelectTrigger id="course" className={errors.courseId ? 'border-destructive' : ''}>
-                  <SelectValue placeholder="Select a course" />
-                </SelectTrigger>
-                <SelectContent>
-                  {courses.map(course => (
-                    <SelectItem key={course.id} value={course.id}>
-                      {course.name} ({course.tees})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <option value="">Select a course</option>
+                {courses.map(course => (
+                  <option key={course.id} value={course.id}>
+                    {course.name} ({course.tees})
+                  </option>
+                ))}
+              </select>
               {errors.courseId && (
-                <p className="text-sm text-destructive">Please select a course</p>
+                <p className="error-message">Please select a course</p>
               )}
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="date">Date Played</Label>
-              <Input
+            <div className="form-group">
+              <label htmlFor="date" className="form-label">Date Played</label>
+              <input
                 id="date"
                 type="date"
+                className="form-input"
                 value={formData.date}
                 onChange={(e) => handleChange('date', e.target.value)}
               />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="score">Total Score</Label>
-              <Input
+            <div className="form-group">
+              <label htmlFor="score" className="form-label">Total Score</label>
+              <input
                 id="score"
                 type="number"
+                className={`form-input ${errors.score ? 'error' : ''}`}
                 placeholder="Enter total score"
                 value={formData.score}
                 onChange={(e) => handleChange('score', e.target.value)}
-                className={errors.score ? 'border-destructive' : ''}
               />
               {errors.score && (
-                <p className="text-sm text-destructive">Please enter a valid score</p>
+                <p className="error-message">Please enter a valid score</p>
               )}
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes (optional)</Label>
-              <Textarea
+            <div className="form-group">
+              <label htmlFor="notes" className="form-label">Notes (optional)</label>
+              <textarea
                 id="notes"
+                className="form-textarea"
                 placeholder="Add any notes about this round..."
                 value={formData.notes}
                 onChange={(e) => handleChange('notes', e.target.value)}
-              />
+              ></textarea>
             </div>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button variant="outline" type="button" onClick={() => navigate('/rounds')}>
+          </div>
+          <div className="card-footer">
+            <button 
+              type="button" 
+              className="cancel-button"
+              onClick={() => navigate('/rounds')}
+            >
               Cancel
-            </Button>
-            <Button type="submit">Save Round</Button>
-          </CardFooter>
+            </button>
+            <button type="submit" className="save-button">
+              Save Round
+            </button>
+          </div>
         </form>
-      </Card>
+      </div>
     </div>
   );
 };

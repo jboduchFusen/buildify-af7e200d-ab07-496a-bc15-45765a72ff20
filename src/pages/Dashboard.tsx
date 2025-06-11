@@ -1,8 +1,8 @@
 
 import { Link } from 'react-router-dom';
 import { PlusCircle, Users, Flag, GolfClub } from 'lucide-react';
-import { useGolfData } from '@/context/GolfDataContext';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { useGolfData } from '../context/GolfDataContext';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 import '../styles/dashboard.css';
 
 const Dashboard = () => {

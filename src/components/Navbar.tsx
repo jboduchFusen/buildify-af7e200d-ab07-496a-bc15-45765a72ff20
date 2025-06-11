@@ -1,37 +1,14 @@
 
 import { Link, useLocation } from 'react-router-dom';
-import { GolfClub, User, LogOut } from 'lucide-react';
+import { GolfClub } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
-import { useAuth } from './AuthProvider';
-import { useState, useRef, useEffect } from 'react';
 import '../styles/navbar.css';
 
 const Navbar = () => {
   const location = useLocation();
-  const { user, signOut } = useAuth();
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const userMenuRef = useRef<HTMLDivElement>(null);
   
   const isActive = (path: string) => {
     return location.pathname === path;
-  };
-
-  // Close user menu when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
-        setUserMenuOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const handleSignOut = async () => {
-    await signOut();
   };
 
   return (
@@ -73,28 +50,6 @@ const Navbar = () => {
         
         <div className="navbar-right">
           <ThemeToggle />
-          
-          <div className="user-menu-container" ref={userMenuRef}>
-            <button 
-              className="user-menu-button"
-              onClick={() => setUserMenuOpen(!userMenuOpen)}
-            >
-              <User className="user-icon" />
-            </button>
-            
-            {userMenuOpen && (
-              <div className="user-menu">
-                <div className="user-menu-header">
-                  <span className="user-email">{user?.email}</span>
-                </div>
-                <div className="user-menu-divider"></div>
-                <button className="user-menu-item" onClick={handleSignOut}>
-                  <LogOut className="user-menu-icon" />
-                  <span>Sign out</span>
-                </button>
-              </div>
-            )}
-          </div>
         </div>
       </div>
       
