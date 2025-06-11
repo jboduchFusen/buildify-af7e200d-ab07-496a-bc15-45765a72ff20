@@ -6,13 +6,12 @@ import { PlusCircle, Users, Flag, GolfClub } from 'lucide-react';
 import { useGolfData } from '@/context/GolfDataContext';
 
 const Dashboard = () => {
-  const { players, courses, rounds } = useGolfData();
+  const { players, courses, rounds, calculateHandicap } = useGolfData();
 
   // Find the player with the lowest handicap (best player)
   const getBestPlayer = () => {
     if (players.length === 0) return null;
     
-    const { calculateHandicap } = useGolfData();
     let bestPlayer = players[0];
     let lowestHandicap = calculateHandicap(bestPlayer.id);
     
