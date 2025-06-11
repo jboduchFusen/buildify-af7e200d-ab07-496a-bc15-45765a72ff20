@@ -31,9 +31,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { PlusCircle, MoreHorizontal, Search, User } from 'lucide-react';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 const Players = () => {
-  const { players, addPlayer, deletePlayer, calculateHandicap } = useGolfData();
+  const { players, addPlayer, deletePlayer, calculateHandicap, loading } = useGolfData();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newPlayer, setNewPlayer] = useState({ name: '', email: '' });
   const [searchQuery, setSearchQuery] = useState('');
@@ -53,6 +54,10 @@ const Players = () => {
     player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (player.email && player.email.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div className="space-y-6">
@@ -168,7 +173,7 @@ const Players = () => {
 
 interface PlayerRowProps {
   player: Player;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<void>;
   calculateHandicap: (playerId: string) => number;
 }
 
