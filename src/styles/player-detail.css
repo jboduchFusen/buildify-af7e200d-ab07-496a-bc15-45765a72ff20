@@ -1,0 +1,194 @@
+
+.player-detail-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.player-detail-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.back-button {
+  margin-right: 1rem;
+}
+
+.player-name {
+  font-size: 1.875rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+
+.player-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .player-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.player-card {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.player-card-header {
+  padding: 1.5rem 1.5rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.player-card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.player-card-description {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
+.player-card-content {
+  padding: 1.5rem;
+}
+
+.player-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.player-detail-item h3 {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  margin-bottom: 0.25rem;
+}
+
+.player-detail-item p {
+  margin: 0;
+}
+
+.player-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.rounds-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.rounds-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.rounds-table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  border-bottom: 1px solid var(--border);
+}
+
+.rounds-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.rounds-table tr:last-child td {
+  border-bottom: none;
+}
+
+.rounds-table tr:hover {
+  background-color: var(--accent);
+}
+
+.no-rounds {
+  text-align: center;
+  padding: 1.5rem;
+  color: var(--muted-foreground);
+}
+
+.view-all-button {
+  display: block;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.delete-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted-foreground);
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+}
+
+.delete-button:hover {
+  color: var(--destructive);
+  background-color: var(--accent);
+}
+
+.alert-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 50;
+}
+
+.alert-content {
+  background-color: var(--background);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 28rem;
+}
+
+.alert-header {
+  margin-bottom: 1rem;
+}
+
+.alert-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.alert-description {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
+.alert-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
