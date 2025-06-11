@@ -1,8 +1,9 @@
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from 'sonner';
+import { supabase, Player as SupaPlayer, Course as SupaCourse, Round as SupaRound } from '@/lib/supabase';
 
-// Types
+// Types with camelCase for frontend use
 export interface Player {
   id: string;
   name: string;
@@ -32,25 +33,57 @@ export interface Round {
   createdAt: string;
 }
 
+// Helper functions to convert between snake_case (DB) and camelCase (frontend)
+const playerFromDB = (player: SupaPlayer): Player => ({
+  id: player.id,
+  name: player.name,
+  email: player.email,
+  createdAt: player.created_at,
+});
+
+const courseFromDB = (course: SupaCourse): Course => ({
+  id: course.id,
+  name: course.name,
+  holes: course.holes,
+  par: course.par,
+  slope: course.slope,
+  rating: course.rating,
+  tees: course.tees,
+  location: course.location,
+  createdAt: course.created_at,
+});
+
+const roundFromDB = (round: SupaRound): Round => ({
+  id: round.id,
+  playerId: round.player_id,
+  courseId: round.course_id,
+  date: round.date,
+  score: round.score,
+  notes: round.notes,
+  createdAt: round.created_at,
+});
+
 interface GolfDataContextType {
   players: Player[];
   courses: Course[];
   rounds: Round[];
-  addPlayer: (player: Omit<Player, 'id' | 'createdAt'>) => void;
-  updatePlayer: (id: string, player: Partial<Player>) => void;
-  deletePlayer: (id: string) => void;
-  addCourse: (course: Omit<Course, 'id' | 'createdAt'>) => void;
-  updateCourse: (id: string, course: Partial<Course>) => void;
-  deleteCourse: (id: string) => void;
-  addRound: (round: Omit<Round, 'id' | 'createdAt'>) => void;
-  updateRound: (id: string, round: Partial<Round>) => void;
-  deleteRound: (id: string) => void;
+  loading: boolean;
+  addPlayer: (player: Omit<Player, 'id' | 'createdAt'>) => Promise<void>;
+  updatePlayer: (id: string, player: Partial<Player>) => Promise<void>;
+  deletePlayer: (id: string) => Promise<void>;
+  addCourse: (course: Omit<Course, 'id' | 'createdAt'>) => Promise<void>;
+  updateCourse: (id: string, course: Partial<Course>) => Promise<void>;
+  deleteCourse: (id: string) => Promise<void>;
+  addRound: (round: Omit<Round, 'id' | 'createdAt'>) => Promise<void>;
+  updateRound: (id: string, round: Partial<Round>) => Promise<void>;
+  deleteRound: (id: string) => Promise<void>;
   getPlayerById: (id: string) => Player | undefined;
   getCourseById: (id: string) => Course | undefined;
   getRoundById: (id: string) => Round | undefined;
   getPlayerRounds: (playerId: string) => Round[];
   getCourseRounds: (courseId: string) => Round[];
   calculateHandicap: (playerId: string) => number;
+  refreshData: () => Promise<void>;
 }
 
 const GolfDataContext = createContext<GolfDataContextType | undefined>(undefined);
@@ -67,102 +100,246 @@ export const GolfDataProvider = ({ children }: { children: ReactNode }) => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [rounds, setRounds] = useState<Round[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Load data from localStorage on initial render
+  // Load data from Supabase on initial render
   useEffect(() => {
-    const storedPlayers = localStorage.getItem('golf-players');
-    const storedCourses = localStorage.getItem('golf-courses');
-    const storedRounds = localStorage.getItem('golf-rounds');
-
-    if (storedPlayers) setPlayers(JSON.parse(storedPlayers));
-    if (storedCourses) setCourses(JSON.parse(storedCourses));
-    if (storedRounds) setRounds(JSON.parse(storedRounds));
+    refreshData();
   }, []);
 
-  // Save data to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('golf-players', JSON.stringify(players));
-  }, [players]);
+  const refreshData = async () => {
+    setLoading(true);
+    try {
+      // Fetch players
+      const { data: playersData, error: playersError } = await supabase
+        .from('players')
+        .select('*')
+        .order('name');
+      
+      if (playersError) throw playersError;
+      setPlayers(playersData.map(playerFromDB));
 
-  useEffect(() => {
-    localStorage.setItem('golf-courses', JSON.stringify(courses));
-  }, [courses]);
+      // Fetch courses
+      const { data: coursesData, error: coursesError } = await supabase
+        .from('courses')
+        .select('*')
+        .order('name');
+      
+      if (coursesError) throw coursesError;
+      setCourses(coursesData.map(courseFromDB));
 
-  useEffect(() => {
-    localStorage.setItem('golf-rounds', JSON.stringify(rounds));
-  }, [rounds]);
+      // Fetch rounds
+      const { data: roundsData, error: roundsError } = await supabase
+        .from('rounds')
+        .select('*')
+        .order('date', { ascending: false });
+      
+      if (roundsError) throw roundsError;
+      setRounds(roundsData.map(roundFromDB));
+    } catch (error) {
+      console.error('Error loading data:', error);
+      toast.error('Failed to load data from the server');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Player CRUD operations
-  const addPlayer = (player: Omit<Player, 'id' | 'createdAt'>) => {
-    const newPlayer: Player = {
-      ...player,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-    };
-    setPlayers([...players, newPlayer]);
-    toast.success(`Player ${player.name} added successfully`);
+  const addPlayer = async (player: Omit<Player, 'id' | 'createdAt'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('players')
+        .insert([{ 
+          name: player.name,
+          email: player.email || null
+        }])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      setPlayers([...players, playerFromDB(data)]);
+      toast.success(`Player ${player.name} added successfully`);
+    } catch (error) {
+      console.error('Error adding player:', error);
+      toast.error('Failed to add player');
+    }
   };
 
-  const updatePlayer = (id: string, player: Partial<Player>) => {
-    setPlayers(
-      players.map((p) => (p.id === id ? { ...p, ...player } : p))
-    );
-    toast.success('Player updated successfully');
+  const updatePlayer = async (id: string, player: Partial<Player>) => {
+    try {
+      const { error } = await supabase
+        .from('players')
+        .update({ 
+          name: player.name,
+          email: player.email || null
+        })
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      setPlayers(players.map(p => p.id === id ? { ...p, ...player } : p));
+      toast.success('Player updated successfully');
+    } catch (error) {
+      console.error('Error updating player:', error);
+      toast.error('Failed to update player');
+    }
   };
 
-  const deletePlayer = (id: string) => {
-    setPlayers(players.filter((p) => p.id !== id));
-    // Also delete all rounds associated with this player
-    setRounds(rounds.filter((r) => r.playerId !== id));
-    toast.success('Player deleted successfully');
+  const deletePlayer = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('players')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      setPlayers(players.filter(p => p.id !== id));
+      // Rounds will be automatically deleted due to cascade delete in DB
+      setRounds(rounds.filter(r => r.playerId !== id));
+      toast.success('Player deleted successfully');
+    } catch (error) {
+      console.error('Error deleting player:', error);
+      toast.error('Failed to delete player');
+    }
   };
 
   // Course CRUD operations
-  const addCourse = (course: Omit<Course, 'id' | 'createdAt'>) => {
-    const newCourse: Course = {
-      ...course,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-    };
-    setCourses([...courses, newCourse]);
-    toast.success(`Course ${course.name} added successfully`);
+  const addCourse = async (course: Omit<Course, 'id' | 'createdAt'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('courses')
+        .insert([{ 
+          name: course.name,
+          holes: course.holes,
+          par: course.par,
+          slope: course.slope,
+          rating: course.rating,
+          tees: course.tees,
+          location: course.location || null
+        }])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      setCourses([...courses, courseFromDB(data)]);
+      toast.success(`Course ${course.name} added successfully`);
+    } catch (error) {
+      console.error('Error adding course:', error);
+      toast.error('Failed to add course');
+    }
   };
 
-  const updateCourse = (id: string, course: Partial<Course>) => {
-    setCourses(
-      courses.map((c) => (c.id === id ? { ...c, ...course } : c))
-    );
-    toast.success('Course updated successfully');
+  const updateCourse = async (id: string, course: Partial<Course>) => {
+    try {
+      const { error } = await supabase
+        .from('courses')
+        .update({ 
+          name: course.name,
+          holes: course.holes,
+          par: course.par,
+          slope: course.slope,
+          rating: course.rating,
+          tees: course.tees,
+          location: course.location || null
+        })
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      setCourses(courses.map(c => c.id === id ? { ...c, ...course } : c));
+      toast.success('Course updated successfully');
+    } catch (error) {
+      console.error('Error updating course:', error);
+      toast.error('Failed to update course');
+    }
   };
 
-  const deleteCourse = (id: string) => {
-    setCourses(courses.filter((c) => c.id !== id));
-    // Also delete all rounds associated with this course
-    setRounds(rounds.filter((r) => r.courseId !== id));
-    toast.success('Course deleted successfully');
+  const deleteCourse = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('courses')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      setCourses(courses.filter(c => c.id !== id));
+      // Rounds will be automatically deleted due to cascade delete in DB
+      setRounds(rounds.filter(r => r.courseId !== id));
+      toast.success('Course deleted successfully');
+    } catch (error) {
+      console.error('Error deleting course:', error);
+      toast.error('Failed to delete course');
+    }
   };
 
   // Round CRUD operations
-  const addRound = (round: Omit<Round, 'id' | 'createdAt'>) => {
-    const newRound: Round = {
-      ...round,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-    };
-    setRounds([...rounds, newRound]);
-    toast.success('Round added successfully');
+  const addRound = async (round: Omit<Round, 'id' | 'createdAt'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('rounds')
+        .insert([{ 
+          player_id: round.playerId,
+          course_id: round.courseId,
+          date: round.date,
+          score: round.score,
+          notes: round.notes || null
+        }])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      setRounds([roundFromDB(data), ...rounds]);
+      toast.success('Round added successfully');
+    } catch (error) {
+      console.error('Error adding round:', error);
+      toast.error('Failed to add round');
+    }
   };
 
-  const updateRound = (id: string, round: Partial<Round>) => {
-    setRounds(
-      rounds.map((r) => (r.id === id ? { ...r, ...round } : r))
-    );
-    toast.success('Round updated successfully');
+  const updateRound = async (id: string, round: Partial<Round>) => {
+    try {
+      const updateData: any = {};
+      if (round.playerId) updateData.player_id = round.playerId;
+      if (round.courseId) updateData.course_id = round.courseId;
+      if (round.date) updateData.date = round.date;
+      if (round.score !== undefined) updateData.score = round.score;
+      if (round.notes !== undefined) updateData.notes = round.notes || null;
+
+      const { error } = await supabase
+        .from('rounds')
+        .update(updateData)
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      setRounds(rounds.map(r => r.id === id ? { ...r, ...round } : r));
+      toast.success('Round updated successfully');
+    } catch (error) {
+      console.error('Error updating round:', error);
+      toast.error('Failed to update round');
+    }
   };
 
-  const deleteRound = (id: string) => {
-    setRounds(rounds.filter((r) => r.id !== id));
-    toast.success('Round deleted successfully');
+  const deleteRound = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('rounds')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      setRounds(rounds.filter(r => r.id !== id));
+      toast.success('Round deleted successfully');
+    } catch (error) {
+      console.error('Error deleting round:', error);
+      toast.error('Failed to delete round');
+    }
   };
 
   // Helper functions
@@ -207,6 +384,7 @@ export const GolfDataProvider = ({ children }: { children: ReactNode }) => {
     players,
     courses,
     rounds,
+    loading,
     addPlayer,
     updatePlayer,
     deletePlayer,
@@ -222,6 +400,7 @@ export const GolfDataProvider = ({ children }: { children: ReactNode }) => {
     getPlayerRounds,
     getCourseRounds,
     calculateHandicap,
+    refreshData,
   };
 
   return <GolfDataContext.Provider value={value}>{children}</GolfDataContext.Provider>;
