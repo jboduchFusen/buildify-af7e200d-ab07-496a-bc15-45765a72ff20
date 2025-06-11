@@ -11,6 +11,7 @@ import PlayerDetail from './pages/PlayerDetail';
 import CourseDetail from './pages/CourseDetail';
 import AddRound from './pages/AddRound';
 import { GolfDataProvider } from './context/GolfDataContext';
+import './styles/global.css';
 
 const queryClient = new QueryClient();
 

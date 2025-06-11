@@ -1,7 +1,8 @@
 
 import { Link, useLocation } from 'react-router-dom';
 import { GolfClub } from 'lucide-react';
-import { ThemeToggle } from './theme-toggle';
+import { ThemeToggle } from './ThemeToggle';
+import '../styles/navbar.css';
 
 const Navbar = () => {
   const location = useLocation();
@@ -11,75 +12,73 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="border-b">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center space-x-8">
-          <Link to="/" className="flex items-center space-x-2">
-            <GolfClub className="h-6 w-6" />
-            <span className="font-bold text-xl">Golf Tracker</span>
+    <nav className="navbar">
+      <div className="container navbar-container">
+        <div className="navbar-left">
+          <Link to="/" className="navbar-brand">
+            <GolfClub className="navbar-logo" />
+            <span className="navbar-title">Golf Tracker</span>
           </Link>
           
-          <div className="hidden md:flex space-x-6">
+          <div className="navbar-links desktop-only">
             <Link 
               to="/" 
-              className={`${isActive('/') ? 'font-medium text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`navbar-link ${isActive('/') ? 'active' : ''}`}
             >
               Dashboard
             </Link>
             <Link 
               to="/players" 
-              className={`${isActive('/players') ? 'font-medium text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`navbar-link ${isActive('/players') ? 'active' : ''}`}
             >
               Players
             </Link>
             <Link 
               to="/courses" 
-              className={`${isActive('/courses') ? 'font-medium text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`navbar-link ${isActive('/courses') ? 'active' : ''}`}
             >
               Courses
             </Link>
             <Link 
               to="/rounds" 
-              className={`${isActive('/rounds') ? 'font-medium text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`navbar-link ${isActive('/rounds') ? 'active' : ''}`}
             >
               Rounds
             </Link>
           </div>
         </div>
         
-        <div className="flex items-center space-x-4">
+        <div className="navbar-right">
           <ThemeToggle />
         </div>
       </div>
       
       {/* Mobile navigation */}
-      <div className="md:hidden border-t">
-        <div className="grid grid-cols-4 text-xs">
-          <Link 
-            to="/" 
-            className={`py-3 text-center ${isActive('/') ? 'text-primary font-medium' : 'text-muted-foreground'}`}
-          >
-            Dashboard
-          </Link>
-          <Link 
-            to="/players" 
-            className={`py-3 text-center ${isActive('/players') ? 'text-primary font-medium' : 'text-muted-foreground'}`}
-          >
-            Players
-          </Link>
-          <Link 
-            to="/courses" 
-            className={`py-3 text-center ${isActive('/courses') ? 'text-primary font-medium' : 'text-muted-foreground'}`}
-          >
-            Courses
-          </Link>
-          <Link 
-            to="/rounds" 
-            className={`py-3 text-center ${isActive('/rounds') ? 'text-primary font-medium' : 'text-muted-foreground'}`}
-          >
-            Rounds
-          </Link>
-        </div>
+      <div className="mobile-nav">
+        <Link 
+          to="/" 
+          className={`mobile-nav-link ${isActive('/') ? 'active' : ''}`}
+        >
+          Dashboard
+        </Link>
+        <Link 
+          to="/players" 
+          className={`mobile-nav-link ${isActive('/players') ? 'active' : ''}`}
+        >
+          Players
+        </Link>
+        <Link 
+          to="/courses" 
+          className={`mobile-nav-link ${isActive('/courses') ? 'active' : ''}`}
+        >
+          Courses
+        </Link>
+        <Link 
+          to="/rounds" 
+          className={`mobile-nav-link ${isActive('/rounds') ? 'active' : ''}`}
+        >
+          Rounds
+        </Link>
       </div>
     </nav>
   );

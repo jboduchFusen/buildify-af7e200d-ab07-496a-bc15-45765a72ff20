@@ -1,14 +1,15 @@
 
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
-import { ThemeProvider } from '@/components/theme-provider';
+import { ThemeProvider } from './ThemeProvider';
+import '../styles/layout.css';
 
 const Layout = () => {
   return (
     <ThemeProvider defaultTheme="light" storageKey="golf-tracker-theme">
-      <div className="min-h-screen bg-background">
+      <div className="layout">
         <Navbar />
-        <main className="container mx-auto py-6 px-4">
+        <main className="container main-content">
           <Outlet />
         </main>
       </div>
