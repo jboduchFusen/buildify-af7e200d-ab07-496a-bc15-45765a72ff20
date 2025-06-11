@@ -2,12 +2,14 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from 'sonner';
 import { supabase, Player as SupaPlayer, Course as SupaCourse, Round as SupaRound } from '@/lib/supabase';
+import { useAuth } from '@/components/AuthProvider';
 
 // Types with camelCase for frontend use
 export interface Player {
   id: string;
   name: string;
   email?: string;
+  authUserId?: string;
   createdAt: string;
 }
 
@@ -38,6 +40,7 @@ const playerFromDB = (player: SupaPlayer): Player => ({
   id: player.id,
   name: player.name,
   email: player.email,
+  authUserId: player.auth_user_id,
   createdAt: player.created_at,
 });
 
@@ -68,7 +71,7 @@ interface GolfDataContextType {
   courses: Course[];
   rounds: Round[];
   loading: boolean;
-  addPlayer: (player: Omit<Player, 'id' | 'createdAt'>) => Promise<void>;
+  addPlayer: (player: Omit<Player, 'id' | 'createdAt' | 'authUserId'>) => Promise<void>;
   updatePlayer: (id: string, player: Partial<Player>) => Promise<void>;
   deletePlayer: (id: string) => Promise<void>;
   addCourse: (course: Omit<Course, 'id' | 'createdAt'>) => Promise<void>;
@@ -97,29 +100,41 @@ export const useGolfData = () => {
 };
 
 export const GolfDataProvider = ({ children }: { children: ReactNode }) => {
+  const { user } = useAuth();
   const [players, setPlayers] = useState<Player[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [rounds, setRounds] = useState<Round[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load data from Supabase on initial render
+  // Load data from Supabase when user changes
   useEffect(() => {
-    refreshData();
-  }, []);
+    if (user) {
+      refreshData();
+    } else {
+      // Clear data when user logs out
+      setPlayers([]);
+      setCourses([]);
+      setRounds([]);
+      setLoading(false);
+    }
+  }, [user]);
 
   const refreshData = async () => {
+    if (!user) return;
+    
     setLoading(true);
     try {
-      // Fetch players
+      // Fetch players (only those belonging to the current user)
       const { data: playersData, error: playersError } = await supabase
         .from('players')
         .select('*')
+        .eq('auth_user_id', user.id)
         .order('name');
       
       if (playersError) throw playersError;
       setPlayers(playersData.map(playerFromDB));
 
-      // Fetch courses
+      // Fetch courses (all courses are visible to all users)
       const { data: coursesData, error: coursesError } = await supabase
         .from('courses')
         .select('*')
@@ -128,14 +143,20 @@ export const GolfDataProvider = ({ children }: { children: ReactNode }) => {
       if (coursesError) throw coursesError;
       setCourses(coursesData.map(courseFromDB));
 
-      // Fetch rounds
-      const { data: roundsData, error: roundsError } = await supabase
-        .from('rounds')
-        .select('*')
-        .order('date', { ascending: false });
-      
-      if (roundsError) throw roundsError;
-      setRounds(roundsData.map(roundFromDB));
+      // Fetch rounds (only those for the current user's players)
+      if (playersData.length > 0) {
+        const playerIds = playersData.map(p => p.id);
+        const { data: roundsData, error: roundsError } = await supabase
+          .from('rounds')
+          .select('*')
+          .in('player_id', playerIds)
+          .order('date', { ascending: false });
+        
+        if (roundsError) throw roundsError;
+        setRounds(roundsData.map(roundFromDB));
+      } else {
+        setRounds([]);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
       toast.error('Failed to load data from the server');
@@ -145,13 +166,19 @@ export const GolfDataProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Player CRUD operations
-  const addPlayer = async (player: Omit<Player, 'id' | 'createdAt'>) => {
+  const addPlayer = async (player: Omit<Player, 'id' | 'createdAt' | 'authUserId'>) => {
+    if (!user) {
+      toast.error('You must be logged in to add a player');
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('players')
         .insert([{ 
           name: player.name,
-          email: player.email || null
+          email: player.email || null,
+          auth_user_id: user.id
         }])
         .select()
         .single();
@@ -167,6 +194,11 @@ export const GolfDataProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updatePlayer = async (id: string, player: Partial<Player>) => {
+    if (!user) {
+      toast.error('You must be logged in to update a player');
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('players')
@@ -174,7 +206,8 @@ export const GolfDataProvider = ({ children }: { children: ReactNode }) => {
           name: player.name,
           email: player.email || null
         })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('auth_user_id', user.id);
       
       if (error) throw error;
       
@@ -187,11 +220,17 @@ export const GolfDataProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deletePlayer = async (id: string) => {
+    if (!user) {
+      toast.error('You must be logged in to delete a player');
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('players')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('auth_user_id', user.id);
       
       if (error) throw error;
       
@@ -207,6 +246,11 @@ export const GolfDataProvider = ({ children }: { children: ReactNode }) => {
 
   // Course CRUD operations
   const addCourse = async (course: Omit<Course, 'id' | 'createdAt'>) => {
+    if (!user) {
+      toast.error('You must be logged in to add a course');
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('courses')
@@ -233,6 +277,11 @@ export const GolfDataProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateCourse = async (id: string, course: Partial<Course>) => {
+    if (!user) {
+      toast.error('You must be logged in to update a course');
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('courses')
@@ -258,6 +307,11 @@ export const GolfDataProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteCourse = async (id: string) => {
+    if (!user) {
+      toast.error('You must be logged in to delete a course');
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('courses')
@@ -278,6 +332,18 @@ export const GolfDataProvider = ({ children }: { children: ReactNode }) => {
 
   // Round CRUD operations
   const addRound = async (round: Omit<Round, 'id' | 'createdAt'>) => {
+    if (!user) {
+      toast.error('You must be logged in to add a round');
+      return;
+    }
+
+    // Verify the player belongs to the current user
+    const player = players.find(p => p.id === round.playerId);
+    if (!player) {
+      toast.error('You can only add rounds for your own players');
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('rounds')
@@ -302,6 +368,20 @@ export const GolfDataProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateRound = async (id: string, round: Partial<Round>) => {
+    if (!user) {
+      toast.error('You must be logged in to update a round');
+      return;
+    }
+
+    // If player ID is being changed, verify the new player belongs to the current user
+    if (round.playerId) {
+      const player = players.find(p => p.id === round.playerId);
+      if (!player) {
+        toast.error('You can only update rounds for your own players');
+        return;
+      }
+    }
+
     try {
       const updateData: any = {};
       if (round.playerId) updateData.player_id = round.playerId;
@@ -326,6 +406,11 @@ export const GolfDataProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteRound = async (id: string) => {
+    if (!user) {
+      toast.error('You must be logged in to delete a round');
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('rounds')
