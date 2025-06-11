@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ChevronLeft } from 'lucide-react';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 const AddRound = () => {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ const AddRound = () => {
   const initialPlayerId = location.state?.playerId || '';
   const initialCourseId = location.state?.courseId || '';
   
-  const { players, courses, addRound } = useGolfData();
+  const { players, courses, addRound, loading } = useGolfData();
   
   const [formData, setFormData] = useState({
     playerId: initialPlayerId,
@@ -47,12 +48,18 @@ const AddRound = () => {
 
   // If there are no players or courses, redirect to the appropriate page
   useEffect(() => {
-    if (players.length === 0) {
-      navigate('/players', { replace: true });
-    } else if (courses.length === 0) {
-      navigate('/courses', { replace: true });
+    if (!loading) {
+      if (players.length === 0) {
+        navigate('/players', { replace: true });
+      } else if (courses.length === 0) {
+        navigate('/courses', { replace: true });
+      }
     }
-  }, [players, courses, navigate]);
+  }, [players, courses, navigate, loading]);
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
   const handleChange = (field: string, value: string) => {
     setFormData({

@@ -41,6 +41,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { ChevronLeft, PlusCircle, Pencil, Trash2 } from 'lucide-react';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 const PlayerDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -52,8 +53,13 @@ const PlayerDetail = () => {
     updatePlayer, 
     deletePlayer,
     calculateHandicap,
-    deleteRound
+    deleteRound,
+    loading
   } = useGolfData();
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
   const player = getPlayerById(id || '');
   

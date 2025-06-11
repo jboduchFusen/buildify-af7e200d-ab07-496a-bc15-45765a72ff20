@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useGolfData } from '@/context/GolfDataContext';
+import { useGolfData, Round } from '@/context/GolfDataContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -39,16 +39,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PlusCircle, MoreHorizontal, Search, GolfClub } from 'lucide-react';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 const Rounds = () => {
   const location = useLocation();
   const initialPlayerId = location.state?.playerId || '';
   const initialCourseId = location.state?.courseId || '';
   
-  const { rounds, players, courses, deleteRound } = useGolfData();
+  const { rounds, players, courses, deleteRound, loading } = useGolfData();
   const [searchQuery, setSearchQuery] = useState('');
   const [playerFilter, setPlayerFilter] = useState(initialPlayerId);
   const [courseFilter, setCourseFilter] = useState(initialCourseId);
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
   const filteredRounds = rounds.filter(round => {
     const player = players.find(p => p.id === round.playerId);
@@ -197,7 +202,7 @@ const Rounds = () => {
 
 interface RoundRowProps {
   round: Round;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<void>;
 }
 
 const RoundRow = ({ round, onDelete }: RoundRowProps) => {

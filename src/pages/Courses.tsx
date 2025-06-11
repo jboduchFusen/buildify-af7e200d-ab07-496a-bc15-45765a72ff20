@@ -31,9 +31,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { PlusCircle, MoreHorizontal, Search, Flag } from 'lucide-react';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 const Courses = () => {
-  const { courses, addCourse, deleteCourse } = useGolfData();
+  const { courses, addCourse, deleteCourse, loading } = useGolfData();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newCourse, setNewCourse] = useState({
     name: '',
@@ -45,6 +46,10 @@ const Courses = () => {
     location: '',
   });
   const [searchQuery, setSearchQuery] = useState('');
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
   const handleAddCourse = () => {
     if (newCourse.name.trim()) {
@@ -238,7 +243,7 @@ const Courses = () => {
 
 interface CourseRowProps {
   course: Course;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<void>;
 }
 
 const CourseRow = ({ course, onDelete }: CourseRowProps) => {
