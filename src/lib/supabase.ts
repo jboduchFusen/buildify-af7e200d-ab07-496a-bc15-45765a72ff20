@@ -10,6 +10,7 @@ export type Player = {
   id: string;
   name: string;
   email?: string;
+  auth_user_id?: string;
   created_at: string;
 };
 
