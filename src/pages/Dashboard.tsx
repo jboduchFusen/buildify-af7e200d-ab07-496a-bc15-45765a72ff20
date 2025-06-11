@@ -4,9 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Users, Flag, GolfClub } from 'lucide-react';
 import { useGolfData } from '@/context/GolfDataContext';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 const Dashboard = () => {
-  const { players, courses, rounds, calculateHandicap } = useGolfData();
+  const { players, courses, rounds, calculateHandicap, loading } = useGolfData();
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
   // Find the player with the lowest handicap (best player)
   const getBestPlayer = () => {
