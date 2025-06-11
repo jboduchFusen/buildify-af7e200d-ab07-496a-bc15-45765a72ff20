@@ -11,8 +11,11 @@ export default defineConfig(({ mode }) => ({
     port: 5173,
   },
   plugins: [
-    react()
-  ].filter(Boolean),
+    react({
+      jsxImportSource: "react",
+      plugins: [["@swc/plugin-emotion", {}]],
+    })
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
