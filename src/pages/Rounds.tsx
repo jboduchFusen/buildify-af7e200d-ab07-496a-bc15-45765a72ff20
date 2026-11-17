@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useGolfData, Round } from '../context/GolfDataContext';
-import { PlusCircle, MoreHorizontal, Search, GolfClub, Trash2 } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Search, Trophy, Trash2 } from 'lucide-react';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import '../styles/rounds.css';
 
@@ -138,7 +138,7 @@ const Rounds = () => {
       {rounds.length === 0 ? (
         <div className="empty-rounds">
           <div className="empty-icon-container">
-            <GolfClub className="empty-icon" />
+            <Trophy className="empty-icon" />
           </div>
           <h2 className="empty-title">No rounds yet</h2>
           <p className="empty-description">

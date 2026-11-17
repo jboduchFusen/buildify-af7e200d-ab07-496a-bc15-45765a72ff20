@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useGolfData, Player } from '../context/GolfDataContext';
-import { PlusCircle, MoreHorizontal, Search, User, Edit, Trash2, GolfClub } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Search, User, Edit, Trash2, Trophy } from 'lucide-react';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import '../styles/players.css';
 
@@ -142,7 +142,7 @@ const Players = () => {
                             className="dropdown-item"
                             onClick={() => setActiveDropdown(null)}
                           >
-                            <GolfClub className="dropdown-icon" />
+                            <Trophy className="dropdown-icon" />
                             Add round
                           </Link>
                           <div className="dropdown-separator"></div>

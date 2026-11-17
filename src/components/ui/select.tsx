@@ -95,7 +95,7 @@ const SelectContent = ({ children, onSelect }: SelectContentProps) => {
   );
 };
 
-interface SelectItemProps extends React.ComponentPropsWithoutRef<"li"> {
+interface SelectItemProps extends Omit<React.ComponentPropsWithoutRef<"li">, "onSelect"> {
   value: string;
   onSelect?: (value: string) => void;
 }

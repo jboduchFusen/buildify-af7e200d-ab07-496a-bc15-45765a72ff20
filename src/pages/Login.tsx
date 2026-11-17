@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/components/AuthProvider';
-import { GolfClub } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import '../styles/auth.css';
 
 const Login = () => {
@@ -33,7 +33,7 @@ const Login = () => {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <GolfClub className="auth-logo" />
+          <Trophy className="auth-logo" />
           <h1 className="auth-title">Golf Tracker</h1>
           <p className="auth-description">Sign in to your account</p>
         </div>

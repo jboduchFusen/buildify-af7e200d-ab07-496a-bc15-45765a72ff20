@@ -1,6 +1,6 @@
 
 import { Link } from 'react-router-dom';
-import { PlusCircle, Users, Flag, GolfClub } from 'lucide-react';
+import { PlusCircle, Users, Flag, Trophy } from 'lucide-react';
 import { useGolfData } from '../context/GolfDataContext';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import '../styles/dashboard.css';
@@ -77,7 +77,7 @@ const Dashboard = () => {
         <div className="stat-card">
           <div className="stat-card-header">
             <h3 className="stat-card-title">Total Rounds</h3>
-            <GolfClub className="stat-card-icon" />
+            <Trophy className="stat-card-icon" />
           </div>
           <div className="stat-card-content">
             <div className="stat-value">{rounds.length}</div>

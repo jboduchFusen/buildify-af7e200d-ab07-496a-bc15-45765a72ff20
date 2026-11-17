@@ -32,4 +32,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 )
 Button.displayName = "Button"
 
-export { Button }
+const buttonVariants = (_opts?: { variant?: ButtonProps['variant']; size?: ButtonProps['size'] }) => "btn";
+
+export { Button, buttonVariants }

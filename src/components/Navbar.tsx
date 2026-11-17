@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from 'react-router-dom';
-import { GolfClub } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import '../styles/navbar.css';
 
@@ -16,7 +16,7 @@ const Navbar = () => {
       <div className="container navbar-container">
         <div className="navbar-left">
           <Link to="/" className="navbar-brand">
-            <GolfClub className="navbar-logo" />
+            <Trophy className="navbar-logo" />
             <span className="navbar-title">Golf Tracker</span>
           </Link>
           
